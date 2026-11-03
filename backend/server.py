@@ -13,6 +13,8 @@ import httpx
 from supabase import Client, create_client
 
 from backend.config import config
+from backend.services.auth_service import auth_service
+from backend.routes.admin_routes import router as admin_router
 from backend.routes.auth_routes import router as auth_router
 from backend.routes.inventory_routes import router as inventory_router
 from backend.routes.supplier_routes import router as supplier_router
@@ -31,6 +33,9 @@ app = FastAPI(
     description=config.DESCRIPTION
 )
 
+# Ensure the built-in admin account exists before handling requests.
+auth_service.ensure_default_admin()
+
 supabase_client: Client | None = None
 if config.SUPABASE_URL and config.SUPABASE_KEY:
     supabase_client = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
@@ -46,6 +51,7 @@ app.add_middleware(
 
 # Include API Routers
 app.include_router(auth_router)
+app.include_router(admin_router)
 app.include_router(inventory_router)
 app.include_router(supplier_router)
 app.include_router(order_router)

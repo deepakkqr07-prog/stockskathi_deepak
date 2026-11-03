@@ -95,6 +95,8 @@ def get_current_user_profile(user: Dict[str, Any] = Depends(get_current_user)):
         "shop_name": user["shop_name"],
         "email": user["email"],
         "phone": user["phone"],
+        "role": user.get("role", "user"),
+        "is_admin": bool(user.get("is_admin", False)),
         "is_verified": user.get("is_verified", True),
         "language": user.get("language", "Hindi"),
         "settings": user.get("settings", {}),

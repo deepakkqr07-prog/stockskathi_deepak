@@ -22,6 +22,10 @@ class Config:
     # Supabase Config
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+
+    # Admin account provisioning (set ADMIN_PASSWORD in the deployment environment)
+    ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@stocksathi.in").strip().lower()
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "")
     
     # Server host & port
     HOST: str = os.getenv("HOST", "0.0.0.0")

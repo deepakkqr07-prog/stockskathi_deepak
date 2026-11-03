@@ -7,14 +7,65 @@ import random
 import datetime
 from typing import Dict, Any, Optional
 from backend.database import get_db_collection
+from backend.config import config
 from backend.security import hash_password, verify_password, validate_password_strength, create_access_token
 from backend.services.subscription_service import subscription_service
 
 class AuthService:
 
+    DEFAULT_ADMIN_EMAIL = config.ADMIN_EMAIL
+
     @staticmethod
     def generate_otp() -> str:
         return f"{random.randint(100000, 999999)}"
+
+    @staticmethod
+    def ensure_default_admin() -> Optional[Dict[str, Any]]:
+        users_coll = get_db_collection("users")
+        admin = users_coll.find_one({"email": AuthService.DEFAULT_ADMIN_EMAIL})
+
+        if admin:
+            updates = {}
+            if admin.get("role") != "admin":
+                updates["role"] = "admin"
+            if admin.get("is_admin") is not True:
+                updates["is_admin"] = True
+            if not admin.get("is_verified"):
+                updates["is_verified"] = True
+            if not admin.get("password_hash") and config.ADMIN_PASSWORD:
+                updates["password_hash"] = hash_password(config.ADMIN_PASSWORD)
+            if updates:
+                users_coll.update_one({"_id": admin["_id"]}, {"$set": updates})
+            return users_coll.find_one({"_id": admin["_id"]})
+
+        if not config.ADMIN_PASSWORD:
+            print("[AUTH] No admin account exists. Set ADMIN_PASSWORD to provision one.")
+            return None
+
+        admin_doc = {
+            "full_name": "StockSathi Admin",
+            "shop_name": "StockSathi Admin Console",
+            "phone": "9999999999",
+            "email": AuthService.DEFAULT_ADMIN_EMAIL,
+            "password_hash": hash_password(config.ADMIN_PASSWORD),
+            "role": "admin",
+            "is_admin": True,
+            "plan": "PREMIUM",
+            "language": "Hindi",
+            "is_verified": True,
+            "has_used_trial": True,
+            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "settings": {
+                "low_stock_threshold": 10,
+                "expiry_alert_days": 30,
+                "language": "Hindi",
+                "voice_speed": "normal",
+                "notification_sms": True,
+                "notification_whatsapp": True
+            }
+        }
+        users_coll.insert_one(admin_doc)
+        return admin_doc
 
     @staticmethod
     def signup(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -54,6 +105,8 @@ class AuthService:
             "email": email,
             "password_hash": hash_password(password),
             "plan": "FREE",
+            "role": "user",
+            "is_admin": False,
             "language": "Hindi",
             "is_verified": False,
             "verification_otp": otp_code,
@@ -120,18 +173,22 @@ class AuthService:
         token = create_access_token({"sub": str(updated_user["_id"])})
         sub_status = subscription_service.get_user_subscription_status(updated_user)
 
+        user_payload = {
+            "id": str(updated_user["_id"]),
+            "full_name": updated_user["full_name"],
+            "shop_name": updated_user["shop_name"],
+            "email": updated_user["email"],
+            "phone": updated_user["phone"],
+            "role": updated_user.get("role", "user"),
+            "is_admin": bool(updated_user.get("is_admin", False)),
+            "is_verified": True,
+            "language": updated_user.get("language", "Hindi"),
+            "subscription": sub_status
+        }
+
         return {
             "token": token,
-            "user": {
-                "id": str(updated_user["_id"]),
-                "full_name": updated_user["full_name"],
-                "shop_name": updated_user["shop_name"],
-                "email": updated_user["email"],
-                "phone": updated_user["phone"],
-                "is_verified": True,
-                "language": updated_user.get("language", "Hindi"),
-                "subscription": sub_status
-            },
+            "user": user_payload,
             "message": "Account verified successfully!"
         }
 
@@ -172,15 +229,17 @@ class AuthService:
             "$or": [{"email": clean_id}, {"phone": clean_id}]
         })
 
-        if not user or not verify_password(password, user.get("password_hash", "")):
+        auth_user = user
+
+        if not auth_user or not verify_password(password, auth_user.get("password_hash", "")):
             raise ValueError("Invalid phone/email or password.")
 
-        if not user.get("is_verified", False):
+        if not auth_user.get("is_verified", False):
             # Generate OTP for pending verification
             otp_code = AuthService.generate_otp()
             now = datetime.datetime.now(datetime.timezone.utc)
             users_coll.update_one(
-                {"_id": user["_id"]},
+                {"_id": auth_user["_id"]},
                 {"$set": {
                     "verification_otp": otp_code,
                     "otp_expires_at": (now + datetime.timedelta(minutes=15)).isoformat()
@@ -188,27 +247,31 @@ class AuthService:
             )
             return {
                 "requires_verification": True,
-                "identifier": user["email"] or user["phone"],
+                "identifier": auth_user["email"] or auth_user["phone"],
                 "message": "Please verify your email/phone before accessing the dashboard.",
                 "dev_otp": otp_code
             }
 
-        token = create_access_token({"sub": str(user["_id"])})
-        sub_status = subscription_service.get_user_subscription_status(user)
+        token = create_access_token({"sub": str(auth_user["_id"])})
+        sub_status = subscription_service.get_user_subscription_status(auth_user)
+
+        user_payload = {
+            "id": str(auth_user["_id"]),
+            "full_name": auth_user["full_name"],
+            "shop_name": auth_user["shop_name"],
+            "email": auth_user["email"],
+            "phone": auth_user["phone"],
+            "role": auth_user.get("role", "user"),
+            "is_admin": bool(auth_user.get("is_admin", False)),
+            "is_verified": True,
+            "language": auth_user.get("language", "Hindi"),
+            "subscription": sub_status
+        }
 
         return {
             "requires_verification": False,
             "token": token,
-            "user": {
-                "id": str(user["_id"]),
-                "full_name": user["full_name"],
-                "shop_name": user["shop_name"],
-                "email": user["email"],
-                "phone": user["phone"],
-                "is_verified": True,
-                "language": user.get("language", "Hindi"),
-                "subscription": sub_status
-            }
+            "user": user_payload
         }
 
     @staticmethod

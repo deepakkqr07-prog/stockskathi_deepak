@@ -8,7 +8,7 @@ const Router = {
   PROTECTED_VIEWS: [
     "dashboard", "inventory", "products", "suppliers", "orders",
     "prediction", "dead-stock", "expiry", "daily-assistant",
-    "settings", "notifications"
+    "settings", "notifications", "admin"
   ],
 
   init() {
@@ -25,7 +25,7 @@ const Router = {
   },
 
   navigate(viewName, updateHash = true) {
-    const cleanView = viewName || "landing";
+    let cleanView = viewName || "landing";
 
     // Authentication Guard
     const token = API.getToken();
@@ -37,10 +37,22 @@ const Router = {
       return;
     }
 
+    if (token && Store.state.user) {
+      const isAdmin = Store.state.user.role === "admin" || Store.state.user.is_admin === true;
+      if (cleanView === "admin" && !isAdmin) {
+        cleanView = "dashboard";
+      } else if (cleanView !== "admin" && isAdmin && this.PROTECTED_VIEWS.includes(cleanView)) {
+        cleanView = "admin";
+      }
+    }
+
     // If authenticated and tries to open login/signup, go to dashboard
     if ((cleanView === "login" || cleanView === "signup") && token && Store.state.user) {
-      this.renderView("dashboard");
-      if (updateHash) window.location.hash = "dashboard";
+      const homeView = Store.state.user.role === "admin" || Store.state.user.is_admin === true
+        ? "admin"
+        : "dashboard";
+      this.renderView(homeView);
+      if (updateHash) window.location.hash = homeView;
       return;
     }
 
@@ -59,6 +71,7 @@ const Router = {
     const appLayout = document.getElementById("app-layout-container");
 
     if (viewName === "landing") {
+      this.updateNavigationVisibility(false);
       if (landingContainer) landingContainer.classList.remove("hidden");
       if (authContainer) authContainer.classList.add("hidden");
       if (appLayout) appLayout.classList.add("hidden");
@@ -67,6 +80,7 @@ const Router = {
     }
 
     if (viewName === "login" || viewName === "signup") {
+      this.updateNavigationVisibility(false);
       if (landingContainer) landingContainer.classList.add("hidden");
       if (authContainer) authContainer.classList.remove("hidden");
       if (appLayout) appLayout.classList.add("hidden");
@@ -86,6 +100,8 @@ const Router = {
     }
 
     // Workspace Views (Dashboard, Inventory, etc.)
+    const isAdmin = Store.state.user && (Store.state.user.role === "admin" || Store.state.user.is_admin === true);
+    this.updateNavigationVisibility(!!isAdmin);
     if (landingContainer) landingContainer.classList.add("hidden");
     if (authContainer) authContainer.classList.add("hidden");
     if (appLayout) appLayout.classList.remove("hidden");
@@ -114,6 +130,15 @@ const Router = {
     });
 
     window.scrollTo(0, 0);
+  },
+
+  updateNavigationVisibility(isAdmin) {
+    document.querySelectorAll("[data-user-nav]").forEach((item) => {
+      item.classList.toggle("hidden", isAdmin);
+    });
+    document.querySelectorAll("[data-admin-nav]").forEach((item) => {
+      item.classList.toggle("hidden", !isAdmin);
+    });
   }
 };
 

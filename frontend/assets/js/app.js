@@ -35,7 +35,12 @@ const App = {
     });
 
     if (Store.state.isAuthenticated) {
-      this.refreshDashboardData();
+      this.updateUserInterface(Store.state);
+      if (this.isAdminUser(Store.state.user)) {
+        this.loadAdminDashboard();
+      } else {
+        this.refreshDashboardData();
+      }
     }
   },
 
@@ -85,6 +90,10 @@ const App = {
 
   async refreshDashboardData() {
     if (!Store.state.isAuthenticated) return;
+    if (this.isAdminUser(Store.state.user)) {
+      await this.loadAdminDashboard();
+      return;
+    }
 
     try {
       // Parallel fetch for speed
@@ -115,6 +124,62 @@ const App = {
       }
     } catch (err) {
       console.error("[Refresh Dashboard Error]:", err);
+    }
+  },
+
+  isAdminUser(user) {
+    return !!user && (user.role === "admin" || user.is_admin === true);
+  },
+
+  async loadAdminDashboard() {
+    const tableBody = document.getElementById("admin-users-table-body");
+    if (tableBody) {
+      tableBody.innerHTML = '<tr><td colspan="6">Loading accounts...</td></tr>';
+    }
+
+    try {
+      const overview = await API.get("/api/admin/overview");
+      const summary = overview.summary || {};
+      const values = {
+        "admin-total-users": summary.total_users,
+        "admin-verified-users": summary.verified_users,
+        "admin-pending-users": summary.pending_verification,
+        "admin-admin-users": summary.admin_users
+      };
+      Object.entries(values).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = Number(value || 0).toLocaleString();
+      });
+
+      if (tableBody) {
+        const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        })[char]);
+        const users = overview.recent_users || [];
+        tableBody.innerHTML = users.length
+          ? users.map((user) => {
+            const createdAt = user.created_at ? new Date(user.created_at).toLocaleDateString() : "—";
+            return `<tr>
+              <td>${escapeHtml(user.full_name || "—")}</td>
+              <td>${escapeHtml(user.shop_name || "—")}</td>
+              <td>${escapeHtml(user.email || "—")}</td>
+              <td>${escapeHtml(user.role || "user")}</td>
+              <td>${user.is_verified ? "Verified" : "Pending"}</td>
+              <td>${escapeHtml(createdAt)}</td>
+            </tr>`;
+          }).join("")
+          : '<tr><td colspan="6">No accounts found.</td></tr>';
+      }
+    } catch (error) {
+      console.error("[Admin Dashboard Load Error]:", error);
+      if (tableBody) {
+        tableBody.innerHTML = '<tr><td colspan="6">Could not load accounts. Please refresh and try again.</td></tr>';
+      }
+      this.showToast("Unable to load the admin dashboard.", "error");
     }
   },
 
@@ -149,6 +214,8 @@ const App = {
   updateUserInterface(state) {
     const user = state.user;
     if (!user) return;
+    const isAdmin = this.isAdminUser(user);
+    Router.updateNavigationVisibility(isAdmin);
 
     // Update Topbar Greeting & Shop Name
     const greetingEl = document.getElementById("topbar-greeting-name");
@@ -163,7 +230,9 @@ const App = {
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? "Good Morning" : (hour < 17 ? "Good Afternoon" : "Good Evening");
 
-    if (greetingEl) greetingEl.textContent = `${timeGreeting}, ${user.full_name}`;
+    if (greetingEl) greetingEl.textContent = isAdmin
+      ? `Admin Control Center, ${user.full_name}`
+      : `${timeGreeting}, ${user.full_name}`;
     if (shopNameEl) shopNameEl.textContent = user.shop_name;
     if (sidebarAvatar) sidebarAvatar.textContent = user.full_name.charAt(0).toUpperCase();
     if (sidebarName) sidebarName.textContent = user.full_name;
@@ -175,11 +244,13 @@ const App = {
       planBadge.className = `badge ${sub.is_premium ? 'badge-primary' : 'badge-neutral'}`;
     }
 
-    if (trialBanner) {
+    if (trialBanner && !isAdmin) {
       if (sub.is_trial_active) {
         trialBanner.classList.remove("hidden");
         if (trialRemainingText) {
           trialRemainingText.textContent = `Your 3-Day Premium Trial ends in ${sub.remaining_trial_days || 2} days. All AI Decision Engines are unlocked.`;
+        } else if (trialBanner) {
+          trialBanner.classList.add("hidden");
         }
       } else {
         trialBanner.classList.add("hidden");

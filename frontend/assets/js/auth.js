@@ -10,6 +10,8 @@ const Auth = {
   },
 
   bindEvents() {
+    this.switchLoginType("user");
+
     // Signup password strength live meter
     const signupPwd = document.getElementById("signup-password");
     if (signupPwd) {
@@ -61,6 +63,32 @@ const Auth = {
         e.preventDefault();
         this.handleResetPassword();
       });
+    }
+  },
+
+  switchLoginType(role) {
+    const userTab = document.getElementById("user-login-tab");
+    const adminTab = document.getElementById("admin-login-tab");
+    const banner = document.getElementById("login-role-banner");
+    const identifier = document.getElementById("login-identifier");
+
+    const isAdmin = role === "admin";
+    if (userTab) {
+      userTab.className = isAdmin ? "btn btn-secondary btn-sm" : "btn btn-primary btn-sm";
+      userTab.style.flex = "1";
+    }
+    if (adminTab) {
+      adminTab.className = isAdmin ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
+      adminTab.style.flex = "1";
+    }
+    if (banner) {
+      banner.textContent = isAdmin ? "Admin login enabled — sign in with your administrator account." : "User login enabled";
+      banner.style.background = isAdmin ? "#FEE2E2" : "#EEF2FF";
+      banner.style.color = isAdmin ? "#991B1B" : "#3730A3";
+    }
+    if (identifier) {
+      identifier.value = "";
+      identifier.placeholder = isAdmin ? "Administrator email" : "e.g. 9876543210 or ramesh@kirana.in";
     }
   },
 
@@ -138,13 +166,15 @@ const Auth = {
   async handleLogin() {
     const identifier = document.getElementById("login-identifier").value.trim();
     const password = document.getElementById("login-password").value;
+    const adminTab = document.getElementById("admin-login-tab");
+    const isAdminLogin = adminTab && adminTab.classList.contains("btn-primary");
 
     if (!identifier || !password) {
       App.showToast("Please enter your Phone/Email and password.", "error");
       return;
     }
 
-    App.showLoading("Signing into StockSathi...");
+    App.showLoading(isAdminLogin ? "Signing in as admin..." : "Signing into StockSathi...");
     try {
       const res = await API.post("/api/auth/login", {
         identifier,
@@ -154,17 +184,36 @@ const Auth = {
       App.hideLoading();
 
       if (res.requires_verification) {
+        if (isAdminLogin) {
+          App.showToast("This account is not an administrator account.", "error");
+          return;
+        }
         this.pendingIdentifier = res.identifier;
         this.openOtpModal(res.identifier, res.dev_otp);
         App.showToast("Please verify your account before accessing the dashboard.", "warning");
         return;
       }
 
+      const isAdmin = res.user.role === "admin" || res.user.is_admin === true;
+      if (isAdminLogin && !isAdmin) {
+        App.showToast("This account does not have administrator access.", "error");
+        return;
+      }
+      if (!isAdminLogin && isAdmin) {
+        App.showToast("Choose Admin Login to sign in with this account.", "error");
+        return;
+      }
+
       API.setToken(res.token);
       Store.setUser(res.user);
       App.showToast(`Welcome back, ${res.user.full_name}!`, "success");
-      Router.navigate("dashboard");
-      App.refreshDashboardData();
+      const homeView = isAdmin ? "admin" : "dashboard";
+      Router.navigate(homeView);
+      if (isAdmin) {
+        App.loadAdminDashboard();
+      } else {
+        App.refreshDashboardData();
+      }
     } catch (err) {
       App.hideLoading();
       App.showToast(err.message, "error");

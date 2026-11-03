@@ -123,3 +123,12 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
         )
         
     return user
+
+
+async def require_admin(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    if user.get("role") != "admin" and user.get("is_admin") is not True:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access is required."
+        )
+    return user
