@@ -1,0 +1,71 @@
+/* Presentation Demo Mode & Guided Script Styles */
+
+.demo-top-banner {
+  background-color: #1E293B;
+  color: #F8FAFC;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-bottom: 2px solid #F59E0B;
+  position: sticky;
+  top: 0;
+  z-index: 110;
+}
+
+.demo-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.demo-mode-tag {
+  background-color: #F59E0B;
+  color: #78350F;
+  font-weight: 800;
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.demo-guide-pill {
+  position: fixed;
+  bottom: 28px;
+  left: calc(var(--sidebar-width) + 28px);
+  background-color: #FFFFFF;
+  border: 1.5px solid #F59E0B;
+  border-radius: var(--radius-xl);
+  padding: 12px 20px;
+  box-shadow: var(--shadow-lg);
+  z-index: 85;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.demo-step-badge {
+  background-color: #FEF3C7;
+  color: #B45309;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.demo-guide-text {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+@media (max-width: 768px) {
+  .demo-guide-pill {
+    left: 20px;
+    right: 20px;
+    bottom: 80px;
+  }
+}

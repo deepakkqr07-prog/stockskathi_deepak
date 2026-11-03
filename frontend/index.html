@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockSathi — Smart Retail Decision Engine for Everyday Shopkeepers</title>
+  <meta name="description" content="Predict future demand, prevent stock-outs, avoid expiry loss, and detect dead money. StockSathi is your AI-powered retail assistant.">
+  
+  <!-- Design System CSS -->
+  <link rel="stylesheet" href="/assets/css/variables.css">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/landing.css">
+  <link rel="stylesheet" href="/assets/css/dashboard.css">
+  <link rel="stylesheet" href="/assets/css/voice.css">
+  <link rel="stylesheet" href="/assets/css/support.css">
+  <link rel="stylesheet" href="/assets/css/demo.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Global Loading Overlay -->
+  <div id="global-loading-overlay" class="modal-backdrop hidden" style="background-color: rgba(15, 23, 42, 0.7); z-index: 10000;">
+    <div style="background: #FFFFFF; padding: 24px 36px; border-radius: var(--radius-lg); display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-lg);">
+      <div style="width: 24px; height: 24px; border: 3px solid #E2E8F0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+      <span id="global-loading-text" style="font-weight: 700; color: var(--text-main); font-size: 0.9375rem;">Loading...</span>
+    </div>
+  </div>
+  <style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+
+  <!-- Presentation Demo Top Banner -->
+  <div id="demo-top-banner" class="demo-top-banner hidden">
+    <div class="demo-banner-left">
+      <span class="demo-mode-tag">DEMO MODE ACTIVE</span>
+      <span>Shop: <strong>Gupta Ji Daily Needs & Kirana</strong> (Plan: <strong>3-Day Premium Trial</strong>)</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button class="btn btn-secondary btn-sm" onclick="DemoService.resetDemo()" style="background: rgba(255,255,255,0.15); color: #FFF; border: none;">Reset Demo</button>
+      <button class="btn btn-primary btn-sm" onclick="Router.navigate('dashboard')">Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Floating 9-Step Demo Walkthrough Runner Pill -->
+  <div id="demo-guide-pill" class="demo-guide-pill hidden">
+    <span id="demo-guide-step-badge" class="demo-step-badge">Step 1 of 9</span>
+    <div style="display: flex; flex-direction: column;">
+      <span id="demo-guide-title" class="demo-guide-text">Step 1: Smart Dashboard</span>
+      <span id="demo-guide-desc" style="font-size: 0.75rem; color: var(--text-muted);">View 3 products needing attention today</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; margin-left: 8px;">
+      <button class="btn btn-secondary btn-sm" onclick="DemoService.prevStep()">◀ Prev</button>
+      <button class="btn btn-primary btn-sm" onclick="DemoService.nextStep()">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. LANDING PAGE VIEW -->
+  <!-- ========================================================================= -->
+  <div id="landing-view-container">
+    <!-- Navbar -->
+    <nav class="landing-nav">
+      <div class="container flex items-center justify-between">
+        <a href="#landing" class="brand-logo">
+          <div class="brand-logo-icon">S</div>
+          <div>
+            <div>StockSathi</div>
+            <div style="font-size: 0.625rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: -3px;">Decision Engine</div>
+          </div>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#pipeline">Decision Engine</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing-section">Pricing</a></li>
+          <li><a href="javascript:void(0)" onclick="DemoService.startDemoMode()" style="color: var(--accent-amber); font-weight: 700;">Live Demo</a></li>
+        </ul>
+        <div class="flex items-center gap-3">
+          <button class="btn btn-secondary btn-sm" onclick="Router.navigate('login')">Login</button>
+          <button class="btn btn-primary btn-sm" onclick="Router.navigate('signup')">Start Free</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-badge">
+          <span>AI-POWERED BUSINESS COPILOT FOR EVERYDAY RETAIL</span>
+        </div>
+        <h1 class="hero-title">Track your stock. Understand your business. Make better decisions.</h1>
+        <p class="hero-subtitle">
+          StockSathi is the smart decision engine built specifically for small shopkeepers. Prevent stock-outs, avoid expiry loss, unlock dead working capital, and make purchases with complete confidence.
+        </p>
+        <div class="hero-cta-group">
+          <button class="btn btn-primary btn-lg" onclick="Router.navigate('signup')">Start Free</button>
+          <button class="btn btn-secondary btn-lg" onclick="DemoService.startDemoMode()">Try Live Demo</button>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 24px; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+          <span>✓ Free Basic Record Keeping</span>
+          <span>✓ 3-Day Full Premium Trial</span>
+          <span>✓ Hindi, Punjabi & English Voice AI</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4-Step Interactive Decision Engine Pipeline -->
+    <section id="pipeline" class="pipeline-section container">
+      <div style="text-align: center; margin-bottom: 40px;">
+        <span class="section-tag">Core Philosophy</span>
+        <h2 class="section-heading">PREDICT → DECIDE → RECOMMEND → ACT</h2>
+        <p class="section-desc" style="margin: 0 auto;">
+          StockSathi does not just log numbers. It analyzes sales velocity, identifies future stock gaps, compares suppliers, and generates ready-to-execute purchase actions.
+        </p>
+      </div>
+
+      <div class="pipeline-grid">
+        <!-- 1. Predict -->
+        <div class="pipeline-card">
+          <div class="pipeline-step-num">1</div>
+          <h3 class="pipeline-card-title">PREDICT</h3>
+          <p class="pipeline-card-desc">Understand future demand before stock runs out based on weekly sales patterns.</p>
+          <div class="pipeline-example-box">
+            <strong>Example:</strong> “Maggi demand projected to rise to 56 packets this week.”
+          </div>
+        </div>
+
+        <!-- 2. Decide -->
+        <div class="pipeline-card">
+          <div class="pipeline-step-num">2</div>
+          <h3 class="pipeline-card-title">DECIDE</h3>
+          <p class="pipeline-card-desc">Determine precisely what action is required to avoid losing customer sales.</p>
+          <div class="pipeline-example-box">
+            <strong>Example:</strong> “Current stock of 20 packets will run out in 2.5 days.”
+          </div>
+        </div>
+
+        <!-- 3. Recommend -->
+        <div class="pipeline-card">
+          <div class="pipeline-step-num">3</div>
+          <h3 class="pipeline-card-title">RECOMMEND</h3>
+          <p class="pipeline-card-desc">Get the optimal reorder quantity, timing, and best Mandi supplier.</p>
+          <div class="pipeline-example-box">
+            <strong>Example:</strong> “Reorder 45 packets from ABC Distributors (24h delivery).”
+          </div>
+        </div>
+
+        <!-- 4. Act -->
+        <div class="pipeline-card">
+          <div class="pipeline-step-num">4</div>
+          <h3 class="pipeline-card-title">ACT</h3>
+          <p class="pipeline-card-desc">Turn the recommendation into an actual purchase order with 1-click or voice.</p>
+          <div class="pipeline-example-box">
+            <strong>Example:</strong> Generate PO and update ledger upon receipt.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Features Grid -->
+    <section id="features" class="container" style="padding: 60px 20px;">
+      <div style="text-align: center;">
+        <span class="section-tag">Built For Shopkeepers</span>
+        <h2 class="section-heading">Everything Your Kirana Shop Needs</h2>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-item-card">
+          <div class="feature-icon-wrapper">🎤</div>
+          <h3 style="font-size: 1.125rem; font-weight: 700;">Voice AI (Hindi, Punjabi, English)</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+            Operate hands-free. Say <em>“Maggi ke 20 packet aur add kar do”</em>. StockSathi reads back the change, asks for confirmation, and updates your inventory.
+          </p>
+        </div>
+
+        <div class="feature-item-card">
+          <div class="feature-icon-wrapper">💰</div>
+          <h3 style="font-size: 1.125rem; font-weight: 700;">Dead Money Detector</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+            Identify slow-moving stock where working capital is trapped. Get practical liquidation advice like bundling or front-counter clearance discounts.
+          </p>
+        </div>
+
+        <div class="feature-item-card">
+          <div class="feature-icon-wrapper">⏳</div>
+          <h3 style="font-size: 1.125rem; font-weight: 700;">Expiry Loss Prevention</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+            Never throw away expired stock again. Get early warning batches at 30, 15, and 7 days with direct promotional recommendations.
+          </p>
+        </div>
+
+        <div class="feature-item-card">
+          <div class="feature-icon-wrapper">🏬</div>
+          <h3 style="font-size: 1.125rem; font-weight: 700;">Smart Mandi Supplier Comparison</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+            Compare wholesale vendors on Price per Unit, Delivery Lead Time, and Reliability Ratings to pick the best supplier for each order.
+          </p>
+        </div>
+
+        <div class="feature-item-card">
+          <div class="feature-icon-wrapper">📋</div>
+          <h3 style="font-size: 1.125rem; font-weight: 700;">Daily Business Assistant</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+            Start each morning with today's prioritized checklist: Reorder low-stock staples, clear near-expiry milk, and verify supplier deliveries.
+          </p>
+        </div>
+
+        <div class="feature-item-card">
+          <div class="feature-icon-wrapper">💬</div>
+          <h3 style="font-size: 1.125rem; font-weight: 700;">AI Shopkeeper Support</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+            Ask questions about your shop: <em>“What is my total stock value?”</em> or <em>“Which items need attention today?”</em> Grounded in your live data.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing-section" class="container" style="padding: 60px 20px 80px;">
+      <div style="text-align: center;">
+        <span class="section-tag">Simple & Transparent Pricing</span>
+        <h2 class="section-heading">Choose The Right Plan For Your Shop</h2>
+        <p class="section-desc" style="margin: 0 auto;">Every account includes a 3-Day Free Trial of all Premium AI features.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- BASIC -->
+        <div class="pricing-card">
+          <h3 style="font-size: 1.25rem; font-weight: 800;">BASIC</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">For small standalone shops keeping basic digital logs.</p>
+          <div class="pricing-price">₹199<span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">/month</span></div>
+          <ul class="pricing-features-list">
+            <li>✓ Basic Product & Stock Records</li>
+            <li>✓ Low Stock Alerts</li>
+            <li>✓ Daily Business Checklist</li>
+            <li>✓ Expiry Loss Prevention</li>
+            <li class="disabled">✕ AI Demand Forecasting</li>
+            <li class="disabled">✕ Voice AI Assistant</li>
+          </ul>
+          <button class="btn btn-secondary w-full" onclick="SubscriptionService.openCheckoutModal('BASIC')">Get Basic</button>
+        </div>
+
+        <!-- STANDARD -->
+        <div class="pricing-card">
+          <h3 style="font-size: 1.25rem; font-weight: 800;">STANDARD</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">For growing retail shops managing multiple suppliers.</p>
+          <div class="pricing-price">₹499<span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">/month</span></div>
+          <ul class="pricing-features-list">
+            <li>✓ Everything in Basic</li>
+            <li>✓ Dead Money Detector</li>
+            <li>✓ Smart Supplier Comparison</li>
+            <li>✓ Automated Purchase Orders</li>
+            <li class="disabled">✕ AI Demand Forecasting</li>
+            <li class="disabled">✕ Voice AI Assistant</li>
+          </ul>
+          <button class="btn btn-secondary w-full" onclick="SubscriptionService.openCheckoutModal('STANDARD')">Get Standard</button>
+        </div>
+
+        <!-- PREMIUM -->
+        <div class="pricing-card popular">
+          <div class="pricing-badge">MOST POPULAR • 3 DAYS FREE</div>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">PREMIUM</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">The complete AI Decision Engine & Voice Copilot.</p>
+          <div class="pricing-price">₹999<span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">/month</span></div>
+          <ul class="pricing-features-list">
+            <li>✓ <strong>Full PREDICT → DECIDE → ACT Engine</strong></li>
+            <li>✓ <strong>AI Demand Prediction (7-Day Forecast)</strong></li>
+            <li>✓ <strong>Voice AI (Hindi, Punjabi & English)</strong></li>
+            <li>✓ <strong>AI Support Assistant Chat</strong></li>
+            <li>✓ <strong>Dead Money & Expiry Prevention</strong></li>
+            <li>✓ <strong>Mandi Vendor Comparison & PO Flow</strong></li>
+          </ul>
+          <button class="btn btn-primary w-full" onclick="SubscriptionService.openCheckoutModal('PREMIUM')">Start 3-Day Free Trial</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+      <div class="container flex justify-between items-center" style="flex-wrap: wrap; gap: 20px;">
+        <div>
+          <div class="brand-logo" style="color: #FFFFFF;">
+            <div class="brand-logo-icon" style="background-color: #10B981;">S</div>
+            <div>StockSathi</div>
+          </div>
+          <p style="font-size: 0.8125rem; margin-top: 6px;">Smart Retail Decision Engine for Small Shopkeepers.</p>
+        </div>
+        <div style="font-size: 0.875rem;">
+          <a href="#landing" style="margin-right: 18px;">Home</a>
+          <a href="#pipeline" style="margin-right: 18px;">Philosophy</a>
+          <a href="#pricing-section" style="margin-right: 18px;">Pricing</a>
+          <a href="javascript:void(0)" onclick="DemoService.startDemoMode()" style="color: #F59E0B;">Presentation Demo</a>
+        </div>
+      </div>
+      <div class="container" style="margin-top: 24px; font-size: 0.75rem; color: #64748B; text-align: center;">
+        © 2026 StockSathi Retail Technologies Pvt. Ltd. All rights reserved.
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. AUTHENTICATION (LOGIN & SIGNUP) VIEW -->
+  <!-- ========================================================================= -->
+  <div id="auth-view-container" class="hidden" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; background: #F8FAFC;">
+    <div style="width: 100%; max-width: 440px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <a href="#landing" class="brand-logo" style="justify-content: center;">
+          <div class="brand-logo-icon">S</div>
+          <div>StockSathi</div>
+        </a>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 6px;">Smart Retail Decision Engine</p>
+      </div>
+
+      <!-- Login Card -->
+      <div id="auth-login-card" class="card">
+        <div class="card-header">
+          <h3 class="card-title">Sign In to Your Shop</h3>
+          <span class="badge badge-primary">Secured</span>
+        </div>
+        <div class="card-body">
+          <form id="login-form">
+            <div class="form-group">
+              <label class="form-label">Phone Number or Email</label>
+              <input type="text" id="login-identifier" class="form-control" placeholder="e.g. 9876543210 or ramesh@kirana.in" required>
+            </div>
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="form-label">Password</label>
+                <a href="javascript:void(0)" onclick="App.openModal('modal-forgot-password')" style="font-size: 0.75rem; font-weight: 600;">Forgot Password?</a>
+              </div>
+              <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full" style="margin-top: 8px;">Login</button>
+          </form>
+
+          <div style="margin: 20px 0; text-align: center; position: relative;">
+            <hr style="border: 0; border-top: 1px solid var(--border-light);">
+            <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #FFF; padding: 0 10px; font-size: 0.75rem; color: var(--text-muted);">OR</span>
+          </div>
+
+          <button class="btn btn-secondary w-full" onclick="DemoService.startDemoMode()" style="border-color: #F59E0B; color: #B45309; background: #FEF3C7; font-weight: 700;">
+            🚀 One-Click Presentation Demo
+          </button>
+        </div>
+        <div class="card-footer" style="text-align: center; font-size: 0.875rem;">
+          Don't have an account? <a href="#signup" style="font-weight: 700;" onclick="Router.navigate('signup')">Create Free Account</a>
+        </div>
+      </div>
+
+      <!-- Signup Card -->
+      <div id="auth-signup-card" class="card hidden">
+        <div class="card-header">
+          <h3 class="card-title">Create Shopkeeper Account</h3>
+          <span class="badge badge-success">Free Tier</span>
+        </div>
+        <div class="card-body">
+          <form id="signup-form">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="signup-name" class="form-control" placeholder="e.g. Ramesh Gupta" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Shop Name</label>
+              <input type="text" id="signup-shop" class="form-control" placeholder="e.g. Gupta Ji Daily Needs" required>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="signup-phone" class="form-control" placeholder="9876543210" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="signup-email" class="form-control" placeholder="ramesh@gmail.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Strong Password</label>
+              <input type="password" id="signup-password" class="form-control" placeholder="Min 8 chars (A-Z, a-z, 0-9, symbol)" required>
+              <div id="signup-strength-meter" class="strength-meter">
+                <div class="strength-bar bar-1"></div>
+                <div class="strength-bar bar-2"></div>
+                <div class="strength-bar bar-3"></div>
+                <div class="strength-bar bar-4"></div>
+              </div>
+              <div id="signup-strength-label" class="strength-text"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" id="signup-confirm-password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full" style="margin-top: 8px;">Create Account</button>
+          </form>
+        </div>
+        <div class="card-footer" style="text-align: center; font-size: 0.875rem;">
+          Already have an account? <a href="#login" style="font-weight: 700;" onclick="Router.navigate('login')">Sign In</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. MAIN WORKSPACE APP LAYOUT -->
+  <!-- ========================================================================= -->
+  <div id="app-layout-container" class="app-layout hidden">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo-icon" style="background-color: #10B981;">S</div>
+        <div class="sidebar-logo">StockSathi</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Core Workspace</div>
+        <div class="sidebar-item active" data-view="dashboard" onclick="Router.navigate('dashboard')">
+          <div class="sidebar-item-content">📊 Dashboard</div>
+        </div>
+        <div class="sidebar-item" data-view="inventory" onclick="Router.navigate('inventory')">
+          <div class="sidebar-item-content">📦 Inventory & Stock</div>
+        </div>
+        <div class="sidebar-item" data-view="orders" onclick="Router.navigate('orders')">
+          <div class="sidebar-item-content">📋 Purchase Orders</div>
+        </div>
+        <div class="sidebar-item" data-view="suppliers" onclick="Router.navigate('suppliers')">
+          <div class="sidebar-item-content">🏬 Mandi Suppliers</div>
+        </div>
+
+        <div class="nav-section-title">Decision Engines (AI)</div>
+        <div class="sidebar-item" data-view="prediction" onclick="Router.navigate('prediction')">
+          <div class="sidebar-item-content">📈 Demand Prediction</div>
+          <span class="sidebar-lock-icon">🔒</span>
+        </div>
+        <div class="sidebar-item" data-view="dead-stock" onclick="Router.navigate('dead-stock')">
+          <div class="sidebar-item-content">💰 Dead Money Detector</div>
+          <span class="sidebar-lock-icon">🔒</span>
+        </div>
+        <div class="sidebar-item" data-view="expiry" onclick="Router.navigate('expiry')">
+          <div class="sidebar-item-content">⏳ Expiry Prevention</div>
+        </div>
+        <div class="sidebar-item" data-view="daily-assistant" onclick="Router.navigate('daily-assistant')">
+          <div class="sidebar-item-content">⚡ Daily Assistant</div>
+        </div>
+
+        <div class="nav-section-title">Account</div>
+        <div class="sidebar-item" data-view="pricing" onclick="Router.navigate('pricing')">
+          <div class="sidebar-item-content">✨ Subscription & Plans</div>
+        </div>
+        <div class="sidebar-item" data-view="settings" onclick="Router.navigate('settings')">
+          <div class="sidebar-item-content">⚙️ Shop Settings</div>
+        </div>
+        <div class="sidebar-item" onclick="Auth.logout()">
+          <div class="sidebar-item-content">🚪 Sign Out</div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user-card">
+          <div id="sidebar-user-avatar" class="user-avatar-circle">R</div>
+          <div style="overflow: hidden;">
+            <div id="sidebar-user-name" style="font-weight: 700; font-size: 0.875rem; color: #FFF; white-space: nowrap; text-overflow: ellipsis;">Ramesh Gupta</div>
+            <div id="sidebar-shop-name" style="font-size: 0.75rem; color: #6EE7B7; white-space: nowrap; text-overflow: ellipsis;">Gupta Ji Daily Needs</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Body -->
+    <main class="app-main">
+      <!-- Topbar -->
+      <header class="app-topbar">
+        <div class="topbar-greeting">
+          <h2 id="topbar-greeting-name">Good Morning, Shopkeeper</h2>
+          <p><span id="topbar-shop-name">Your Shop</span> • Plan: <span id="topbar-plan-badge" class="badge badge-primary">FREE</span></p>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Speak to StockSathi button -->
+          <button id="topbar-mic-btn" class="btn btn-mic btn-sm" onclick="VoiceService.openVoiceModal()">
+            <span style="font-size: 1.1rem;">🎤</span> Speak to StockSathi
+          </button>
+
+          <!-- Notification Bell with Dropdown -->
+          <div style="position: relative;">
+            <button class="btn btn-secondary btn-icon" onclick="App.toggleNotificationsPanel()">
+              🔔
+              <span id="topbar-notif-badge" class="badge badge-danger hidden" style="position: absolute; top: -4px; right: -4px; padding: 2px 6px; font-size: 0.625rem;">0</span>
+            </button>
+            <div id="notifications-dropdown-panel" class="card hidden" style="position: absolute; right: 0; top: 48px; width: 340px; z-index: 100; box-shadow: var(--shadow-xl);">
+              <div class="card-header" style="padding: 12px 16px;">
+                <strong style="font-size: 0.875rem;">Notifications</strong>
+                <a href="javascript:void(0)" onclick="App.markAllNotificationsRead()" style="font-size: 0.75rem;">Mark all read</a>
+              </div>
+              <div id="notifications-dropdown-list" style="max-height: 280px; overflow-y: auto;"></div>
+            </div>
+          </div>
+
+          <!-- Ask Support Assistant -->
+          <button class="btn btn-outline btn-sm" onclick="SupportService.toggleDrawer()">
+            💬 Shop Assistant
+          </button>
+        </div>
+      </header>
+
+      <!-- 3-Day Trial Countdown Banner -->
+      <div id="trial-countdown-banner" class="trial-banner hidden">
+        <div>
+          <span style="color: #B45309; font-weight: 800;">✨ Premium Trial Active:</span>
+          <span id="trial-remaining-text">All AI Decision Engines unlocked.</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="SubscriptionService.openCheckoutModal('PREMIUM')">Manage Subscription</button>
+      </div>
+
+      <!-- WORKSPACE VIEWS -->
+      <div class="workspace-body">
+        
+        <!-- View: Dashboard -->
+        <div id="view-dashboard" class="workspace-view">
+          <!-- KPI Metrics Row -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total Products</span>
+              <span id="kpi-total-products" class="kpi-value">0</span>
+              <span class="kpi-footer text-muted">Registered in shop</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Current Stock Value</span>
+              <span id="kpi-stock-value" class="kpi-value">₹0</span>
+              <span class="kpi-footer text-success">Cost Basis</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Low Stock Items</span>
+              <span id="kpi-low-stock" class="kpi-value" style="color: var(--accent-amber);">0</span>
+              <span class="kpi-footer text-warning">Reorder recommended</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Expiring Soon</span>
+              <span id="kpi-expiring" class="kpi-value" style="color: var(--crimson-danger);">0</span>
+              <span class="kpi-footer text-danger">Within 30 days</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Dead Stock Value</span>
+              <span id="kpi-dead-stock" class="kpi-value" style="color: #64748B;">₹0</span>
+              <span class="kpi-footer text-muted">Stuck working capital</span>
+            </div>
+          </div>
+
+          <!-- Interactive Decision Engine Hero Card -->
+          <div id="decision-engine-hero-card" class="decision-engine-hero" style="margin-top: 24px;"></div>
+
+          <!-- 2 Columns: Today's Checklist & Quick Inventory Preview -->
+          <div class="grid grid-cols-2 gap-6" style="margin-top: 24px;">
+            <!-- Today's Checklist -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">⚡ Today's Business Actions</h3>
+                <span class="badge badge-primary">AI Prioritized</span>
+              </div>
+              <div id="daily-actions-checklist" style="display: flex; flex-direction: column;"></div>
+            </div>
+
+            <!-- Quick Voice Action Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">🎤 Speak to StockSathi</h3>
+                <span class="badge badge-success">Live Ready</span>
+              </div>
+              <div class="card-body" style="text-align: center; padding: 28px;">
+                <p style="font-size: 0.9375rem; color: var(--text-muted); margin-bottom: 20px;">
+                  Quickly update stock, record incoming deliveries, or ask questions in Hindi, Punjabi, or English without typing.
+                </p>
+                <button class="btn btn-mic btn-lg" onclick="VoiceService.openVoiceModal()">
+                  <span>🎤</span> Click to Speak
+                </button>
+                <div class="voice-chips-container" style="margin-top: 20px;">
+                  <button class="voice-chip" onclick="VoiceService.openVoiceModal(); setTimeout(() => VoiceService.processSpokenText('Maggi ke 20 packet aur add kar do'), 300);">“Maggi ke 20 packet aur add kar do”</button>
+                  <button class="voice-chip" onclick="VoiceService.openVoiceModal(); setTimeout(() => VoiceService.processSpokenText('Amul milk 5 kam karo'), 300);">“Amul milk 5 kam karo”</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View: Inventory & Products -->
+        <div id="view-inventory" class="workspace-view hidden">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Inventory & Stock Ledger</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Manage real-time product quantities, cost prices, selling MRP, and expiry dates.</p>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary btn-sm" onclick="App.openModal('modal-add-product')">+ Add Product</button>
+              </div>
+            </div>
+            <div class="card-body" style="padding: 16px 24px;">
+              <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <input type="text" id="inventory-search-input" class="form-control" placeholder="Search product by name, supplier, category..." style="max-width: 380px;">
+                <select id="inventory-category-filter" class="form-select" style="max-width: 200px;">
+                  <option value="ALL">All Categories</option>
+                  <option value="Groceries">Groceries</option>
+                  <option value="Dairy">Dairy</option>
+                  <option value="Snacks">Snacks</option>
+                  <option value="Stationery">Stationery</option>
+                </select>
+              </div>
+
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Product & Category</th>
+                      <th>Quantity (Adjust)</th>
+                      <th>Cost Price</th>
+                      <th>Selling MRP</th>
+                      <th>Supplier</th>
+                      <th>Stock Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inventory-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View: Demand Prediction -->
+        <div id="view-prediction" class="workspace-view hidden">
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">📈 AI Demand Prediction Engine</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Projects 7-day future demand based on velocity, stock buffers, and prevents stock-outs.</p>
+              </div>
+              <span class="badge badge-primary">PREDICT → DECIDE → ACT</span>
+            </div>
+          </div>
+          <div id="predictions-grid-container" class="grid grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- View: Dead Money Detector -->
+        <div id="view-dead-stock" class="workspace-view hidden">
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">💰 Dead Money Detector</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Identifies slow-moving products where your cash is stuck for >30 days.</p>
+              </div>
+              <div>
+                <span style="font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px;">Total Locked Capital:</span>
+                <strong id="dead-money-total-val" style="font-size: 1.25rem; color: var(--crimson-danger);">₹0</strong>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="dead-money-summary-tip" style="background: #FEF2F2; border-left: 3px solid #DC2626; padding: 12px; border-radius: 6px; font-size: 0.875rem; margin-bottom: 16px;"></div>
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Stock Qty</th>
+                      <th>Money Stuck</th>
+                      <th>Inactive Since</th>
+                      <th>Risk Level</th>
+                      <th>Action Recommendation</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dead-money-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View: Expiry Loss Prevention -->
+        <div id="view-expiry" class="workspace-view hidden">
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">⏳ Expiry Loss Prevention Engine</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Tracks batches approaching shelf-life limit so you can clear them before loss occurs.</p>
+              </div>
+              <div>
+                <span style="font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px;">At-Risk Value:</span>
+                <strong id="expiry-total-risk-val" style="font-size: 1.25rem; color: var(--accent-amber);">₹0</strong>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Product & Batch</th>
+                      <th>Expiry Date</th>
+                      <th>Days Left</th>
+                      <th>At-Risk Quantity</th>
+                      <th>Potential Loss</th>
+                      <th>Rescue Recommendation</th>
+                    </tr>
+                  </thead>
+                  <tbody id="expiry-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View: Suppliers & Comparison -->
+        <div id="view-suppliers" class="workspace-view hidden">
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">🏬 Wholesale Mandi Suppliers</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Supplier directory and smart multi-vendor comparison matrix.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="App.openModal('modal-add-supplier')">+ Add Supplier</button>
+            </div>
+          </div>
+          <div id="suppliers-grid-container" class="grid grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- View: Purchase Orders -->
+        <div id="view-orders" class="workspace-view hidden">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">📋 Purchase Orders</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Purchase orders generated directly from AI demand recommendations.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>PO Number</th>
+                      <th>Supplier Name</th>
+                      <th>Items & Quantity</th>
+                      <th>Total Amount</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View: Daily Assistant -->
+        <div id="view-daily-assistant" class="workspace-view hidden">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">⚡ Daily Business Assistant Checklist</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Prioritized daily tasks generated by analyzing live stock velocity, expiry dates, and supplier schedules.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="daily-assistant-full-list" style="display: flex; flex-direction: column;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View: Pricing & Plans -->
+        <div id="view-pricing" class="workspace-view hidden">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h2 class="section-heading">StockSathi Subscription Plans</h2>
+            <p class="section-desc" style="margin: 0 auto;">Choose a plan or activate your 3-Day Free Trial to unlock all AI Decision Engines.</p>
+          </div>
+          <div class="pricing-grid">
+            <div class="pricing-card">
+              <h3 style="font-size: 1.25rem; font-weight: 800;">BASIC</h3>
+              <div class="pricing-price">₹199<span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">/mo</span></div>
+              <ul class="pricing-features-list">
+                <li>✓ Basic Product Records</li>
+                <li>✓ Low Stock Alerts</li>
+                <li>✓ Expiry Loss Prevention</li>
+              </ul>
+              <button class="btn btn-secondary w-full" onclick="SubscriptionService.openCheckoutModal('BASIC')">Select Basic</button>
+            </div>
+            <div class="pricing-card">
+              <h3 style="font-size: 1.25rem; font-weight: 800;">STANDARD</h3>
+              <div class="pricing-price">₹499<span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">/mo</span></div>
+              <ul class="pricing-features-list">
+                <li>✓ Dead Money Detector</li>
+                <li>✓ Smart Supplier Comparison</li>
+                <li>✓ Purchase Orders Flow</li>
+              </ul>
+              <button class="btn btn-secondary w-full" onclick="SubscriptionService.openCheckoutModal('STANDARD')">Select Standard</button>
+            </div>
+            <div class="pricing-card popular">
+              <div class="pricing-badge">3 DAYS FREE</div>
+              <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">PREMIUM</h3>
+              <div class="pricing-price">₹999<span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">/mo</span></div>
+              <ul class="pricing-features-list">
+                <li>✓ Full AI Decision Engine</li>
+                <li>✓ Voice AI (Hindi/Punjabi/English)</li>
+                <li>✓ AI Demand Prediction</li>
+                <li>✓ AI Shop Assistant Chat</li>
+              </ul>
+              <button class="btn btn-primary w-full" onclick="SubscriptionService.openCheckoutModal('PREMIUM')">Upgrade to Premium</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- View: Settings -->
+        <div id="view-settings" class="workspace-view hidden">
+          <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="card-header">
+              <h3 class="card-title">Shop & Profile Settings</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Shopkeeper Name</label>
+                <input type="text" id="settings-name" class="form-control" value="Ramesh Gupta">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Shop Name</label>
+                <input type="text" id="settings-shop" class="form-control" value="Gupta Ji Daily Needs & Kirana">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Preferred Language</label>
+                <select id="settings-lang" class="form-select">
+                  <option value="Hindi">Hindi (हिंदी)</option>
+                  <option value="Punjabi">Punjabi (ਪੰਜਾਬੀ)</option>
+                  <option value="English">English</option>
+                  <option value="Hinglish">Hinglish</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Low Stock Threshold (Packets)</label>
+                <input type="number" id="settings-threshold" class="form-control" value="15">
+              </div>
+              <button class="btn btn-primary" onclick="App.showToast('Settings saved successfully!', 'success')">Save Settings</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. MODALS & DRAWERS -->
+  <!-- ========================================================================= -->
+
+  <!-- Modal: Voice AI Assistant -->
+  <div id="modal-voice-assistant" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.25rem;">🎤</span>
+          <strong style="font-size: 1.125rem;">Voice AI Assistant</strong>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-voice-assistant')">✕</button>
+      </div>
+      <div class="voice-modal-content">
+        <!-- Mic Button -->
+        <div id="voice-mic-trigger" class="voice-mic-circle" onclick="VoiceService.toggleListening()" style="cursor: pointer;">
+          <span style="font-size: 2rem;">🎤</span>
+        </div>
+        <div id="voice-mic-status" style="font-weight: 700; font-size: 0.9375rem; color: var(--text-main); margin-bottom: 4px;">Click microphone to speak</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">Supports Hindi, Punjabi, Hinglish & English</div>
+
+        <!-- Audio Wave Visualizer -->
+        <div class="audio-wave-container">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+
+        <!-- Live Spoken Transcript -->
+        <div id="voice-live-transcript" class="voice-transcript-box">
+          Click microphone or select a voice prompt below...
+        </div>
+
+        <!-- Read-Back & Diff Card -->
+        <div id="voice-readback-card" class="readback-card hidden">
+          <div id="voice-readback-text" class="readback-spoken-text"></div>
+          <div class="readback-diff-grid">
+            <div>
+              <div class="diff-box-label">Previous Stock</div>
+              <div id="voice-diff-prev" class="diff-box-val">0</div>
+            </div>
+            <div>
+              <div class="diff-box-label">Proposed Change</div>
+              <div id="voice-diff-change" class="diff-box-val added">+0</div>
+            </div>
+            <div>
+              <div class="diff-box-label">New Total Stock</div>
+              <div id="voice-diff-new" class="diff-box-val" style="color: var(--primary);">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Confirmation Buttons -->
+        <div id="voice-action-buttons" class="hidden" style="display: flex; gap: 10px; justify-content: center; margin-top: 16px;">
+          <button class="btn btn-primary" onclick="VoiceService.processSpokenText('Haan')">✓ YES, UPDATE</button>
+          <button class="btn btn-secondary" onclick="VoiceService.processSpokenText('Nahi, 30 add karo')">CHANGE</button>
+          <button class="btn btn-outline" style="color: var(--crimson-danger);" onclick="VoiceService.resetVoiceUI()">CANCEL</button>
+        </div>
+
+        <!-- Preset Spoken Scenarios for Presentation -->
+        <div style="margin-top: 24px; text-align: left; border-top: 1px solid var(--border-light); padding-top: 14px;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Quick Voice Commands (Click to Test):</div>
+          <div class="voice-chips-container" style="justify-content: flex-start;">
+            <button class="voice-chip" data-command="Maggi ke 20 packet aur add kar do">“Maggi ke 20 packet aur add kar do”</button>
+            <button class="voice-chip" data-command="Nahi, 30 add karo">“Nahi, 30 add karo”</button>
+            <button class="voice-chip" data-command="Haan, update kar do">“Haan, update kar do”</button>
+            <button class="voice-chip" data-command="Amul milk 5 packet kam karo">“Amul milk 5 packet kam karo”</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Support Assistant Chat Drawer -->
+  <div id="support-drawer" class="support-drawer">
+    <div class="support-header">
+      <div>
+        <h3>StockSathi Support</h3>
+        <p>Ask anything about your shop.</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="SupportService.closeDrawer()" style="background: rgba(255,255,255,0.2); color: #FFF; border: none;">✕</button>
+    </div>
+    <div id="support-messages-list" class="support-messages-container">
+      <div class="chat-bubble assistant">
+        Namaste! Main aapka StockSathi business assistant hoon. Aap mujhse stock, stuck capital, expiry, aur purchase recommendations ke baare mein pooch sakte hain.
+      </div>
+    </div>
+    <div class="support-quick-pills">
+      <button class="quick-pill-btn" data-query="Aaj mujhe shop mein kya karna chahiye?">Aaj kya karein?</button>
+      <button class="quick-pill-btn" data-query="Mera total stock value kitna hai?">Total Stock Value</button>
+      <button class="quick-pill-btn" data-query="Kaunse products low stock hain?">Low Stock Items</button>
+      <button class="quick-pill-btn" data-query="Kitna dead money fasa hua hai?">Dead Money</button>
+    </div>
+    <form id="support-chat-form" class="support-input-area">
+      <input type="text" id="support-chat-input" class="form-control" placeholder="Ask about your stock or shop..." required>
+      <button type="submit" class="btn btn-primary btn-sm">Send</button>
+    </form>
+  </div>
+
+  <!-- Modal: OTP Verification -->
+  <div id="modal-otp-verification" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Verify Your Account</h3>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-otp-verification')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">
+          Please enter the 6-digit verification OTP sent to <strong id="otp-modal-target">your contact</strong>.
+        </p>
+        <div id="otp-dev-code-banner" class="hidden" style="background: #FEF3C7; border: 1px solid #FDE68A; padding: 10px; border-radius: 8px; font-size: 0.8125rem; color: #92400E; margin-bottom: 16px;">
+          🔑 <strong>Development Verification Code:</strong> <span id="otp-dev-code" style="font-size: 1.1rem; font-weight: 800; letter-spacing: 2px;"></span>
+        </div>
+        <form id="otp-form">
+          <div class="form-group">
+            <label class="form-label">6-Digit Code</label>
+            <input type="text" id="otp-input-code" class="form-control" placeholder="123456" maxlength="6" style="font-size: 1.25rem; letter-spacing: 4px; text-align: center;" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-full">Verify & Access Dashboard</button>
+        </form>
+        <div style="text-align: center; margin-top: 14px; font-size: 0.8125rem;">
+          Didn't receive code? <a href="javascript:void(0)" onclick="Auth.resendOtp()" style="font-weight: 700;">Resend OTP</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Forgot Password -->
+  <div id="modal-forgot-password" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Forgot Password</h3>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-forgot-password')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="forgot-password-form">
+          <div class="form-group">
+            <label class="form-label">Registered Phone or Email</label>
+            <input type="text" id="forgot-identifier" class="form-control" placeholder="9876543210 or email" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-full">Send Reset Code</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Reset Password -->
+  <div id="modal-reset-password" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Set New Password</h3>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-reset-password')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #FEF3C7; border: 1px solid #FDE68A; padding: 10px; border-radius: 8px; font-size: 0.8125rem; color: #92400E; margin-bottom: 16px;">
+          🔑 <strong>Reset OTP for <span id="reset-target-id"></span>:</strong> <span id="reset-dev-code" style="font-weight: 800;"></span>
+        </div>
+        <form id="reset-password-form">
+          <div class="form-group">
+            <label class="form-label">6-Digit Reset OTP</label>
+            <input type="text" id="reset-otp-input" class="form-control" placeholder="123456" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" id="reset-new-password" class="form-control" placeholder="Min 8 chars" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" id="reset-confirm-password" class="form-control" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-full">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Upgrade Prompt (When free user clicks locked feature) -->
+  <div id="modal-upgrade-prompt" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="locked-badge-pill">🔒 Premium Feature</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-upgrade-prompt')">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 28px 24px;">
+        <h3 id="upgrade-feature-title" style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Premium Decision Engine</h3>
+        <p id="upgrade-feature-desc" style="font-size: 0.9375rem; color: var(--text-muted); margin-bottom: 24px;">
+          This feature is available with StockSathi Premium.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="upgrade-start-trial-btn" class="btn btn-primary btn-lg" onclick="SubscriptionService.startFreeTrial()">
+            🎉 Start 3-Day Free Trial
+          </button>
+          <button class="btn btn-secondary" onclick="App.closeModal('modal-upgrade-prompt'); Router.navigate('pricing');">
+            View All Plans (from ₹199/mo)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Subscription Checkout (Realistic Mock Gateway) -->
+  <div id="modal-subscription-checkout" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Complete Subscription</h3>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-subscription-checkout')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #F8FAFC; border: 1px solid var(--border-light); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 700;">
+            <span id="checkout-plan-name">StockSathi Premium</span>
+            <span id="checkout-plan-price">₹999</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--text-muted); margin-top: 6px;">
+            <span>GST (18%)</span>
+            <span id="checkout-gst-amount">₹180</span>
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--border-light); margin: 10px 0;">
+          <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; color: var(--primary);">
+            <span>Total Payable:</span>
+            <span id="checkout-total-amount">₹1,179</span>
+          </div>
+        </div>
+
+        <form id="checkout-form">
+          <div class="form-group">
+            <label class="form-label">Select Payment Method</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer;">
+                <input type="radio" name="pay_method" value="UPI" checked>
+                <strong>Instant UPI / QR / Google Pay / PhonePe</strong>
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer;">
+                <input type="radio" name="pay_method" value="NetBanking">
+                <span>Net Banking (SBI / HDFC / ICICI / Axis)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer;">
+                <input type="radio" name="pay_method" value="DebitCard">
+                <span>Business Debit / Credit Card</span>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-full btn-lg" style="margin-top: 12px;">Activate Subscription</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Product -->
+  <div id="modal-add-product" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Product</h3>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-add-product')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="add-product-form">
+          <div class="form-group">
+            <label class="form-label">Product Name</label>
+            <input type="text" id="add-prod-name" class="form-control" placeholder="e.g. Maggi 2-Minute Noodles" required>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="add-prod-category" class="form-select">
+                <option value="Groceries">Groceries</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Snacks">Snacks</option>
+                <option value="Stationery">Stationery</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Unit</label>
+              <input type="text" id="add-prod-unit" class="form-control" value="packet" required>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label">Stock Quantity</label>
+              <input type="number" id="add-prod-qty" class="form-control" value="20" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Min Stock Level</label>
+              <input type="number" id="add-prod-min" class="form-control" value="10" required>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label">Purchase Cost (₹)</label>
+              <input type="number" step="0.01" id="add-prod-cost" class="form-control" value="12.00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Selling MRP (₹)</label>
+              <input type="number" step="0.01" id="add-prod-price" class="form-control" value="14.00" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supplier Name</label>
+            <input type="text" id="add-prod-supplier" class="form-control" value="ABC Wholesale Distributors">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expiry Date (Optional)</label>
+            <input type="date" id="add-prod-expiry" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary w-full">Save Product</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Product -->
+  <div id="modal-edit-product" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Product</h3>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-edit-product')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-product-form">
+          <div class="form-group">
+            <label class="form-label">Product Name</label>
+            <input type="text" id="edit-prod-name" class="form-control" required>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="edit-prod-category" class="form-select">
+                <option value="Groceries">Groceries</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Snacks">Snacks</option>
+                <option value="Stationery">Stationery</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Unit</label>
+              <input type="text" id="edit-prod-unit" class="form-control" required>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label">Quantity</label>
+              <input type="number" id="edit-prod-qty" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Min Stock Level</label>
+              <input type="number" id="edit-prod-min" class="form-control" required>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label">Cost (₹)</label>
+              <input type="number" step="0.01" id="edit-prod-cost" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">MRP (₹)</label>
+              <input type="number" step="0.01" id="edit-prod-price" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supplier</label>
+            <input type="text" id="edit-prod-supplier" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expiry Date</label>
+            <input type="date" id="edit-prod-expiry" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary w-full">Update Product</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Supplier Comparison -->
+  <div id="modal-supplier-compare" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Smart Mandi Supplier Comparison</h3>
+        <button class="btn btn-secondary btn-sm" onclick="App.closeModal('modal-supplier-compare')">✕</button>
+      </div>
+      <div id="supplier-compare-modal-content" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Core App Scripts (Modular ES6) -->
+  <script src="/assets/js/config.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/store.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/subscriptionService.js"></script>
+  <script src="/assets/js/voiceService.js"></script>
+  <script src="/assets/js/supportService.js"></script>
+  <script src="/assets/js/demoService.js"></script>
+  <script src="/assets/js/router.js"></script>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>

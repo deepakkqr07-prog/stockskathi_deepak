@@ -1,0 +1,3 @@
+"""
+StockSathi Backend Package
+"""
